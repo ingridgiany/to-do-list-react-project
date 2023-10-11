@@ -3,16 +3,29 @@ import './home.css'
 
 import { Link } from "react-router-dom"
 
+import { auth } from '../../firebaseConnection'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+
+import { useNavigate } from "react-router-dom"
+
 export default function Home() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  function handleLogin(e){
+  const navigate = useNavigate()
+
+  async function handleLogin(e) {
     e.preventDefault()
 
-    if(email !== '' && password !== ''){
-      alert('TEST')
-    }else {
+    if (email !== '' && password !== '') {
+      await signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          navigate('/admin', { replace: true })
+        })
+        .catch((error) => {
+          console.log('ERROR LOGIN ' + error)
+        })
+    } else {
       alert('Fill in all fields')
     }
 
@@ -25,19 +38,21 @@ export default function Home() {
       <span>Manage your schedule easily...</span>
 
       <form className="form" onSubmit={handleLogin}>
-        <input type="text"
+        <input
+          autoComplete="username"
+          type="text"
           placeholder="Type your email"
           value={email}
           onChange={(e) => { setEmail(e.target.value) }} />
 
         <input
-          autoComplete={false}
+          autoComplete="current-password"
           type="password"
           placeholder="******"
           value={password}
           onChange={(e) => { setPassword(e.target.value) }} />
 
-        <button type="submit">Login</button>
+        <button type="submit">Sign in</button>
       </form>
 
       <Link className="button-link" to='/register'>
