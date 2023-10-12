@@ -6,17 +6,46 @@ import { signOut } from 'firebase/auth'
 
 import {
     addDoc,
-    collection
+    collection,
+    onSnapshot,
+    query,
+    orderBy,
+    where
 } from 'firebase/firestore'
 
 export default function Admin() {
     const [taksInput, setTaksInput] = useState('')
     const [user, setUser] = useState({})
 
+    const [taks, setTaks] = useState([])
+
     useEffect(() => {
         async function loadTasks() {
             const userDetail = localStorage.getItem('@detailUser')
             setUser(JSON.parse(userDetail))
+
+            if(userDetail){
+                const data = JSON.parse(userDetail)
+
+                const taskRef = collection(db, 'taks')
+                const q = query(taskRef, orderBy('created', 'desc'),
+                where('userUid', '==', data?.uid))
+
+                const unsub = onSnapshot(q, (snapshot) => {
+                    let list = []
+
+                    snapshot.forEach((doc)=> {
+                        list.push({
+                            id: doc.id,
+                            task: doc.data().task,
+                            userUid: doc.data().userUid
+                        })
+                    })
+
+                    console.log(list)
+                    setTaks(list)
+                })
+            }
         }
 
         loadTasks()
