@@ -10,7 +10,9 @@ import {
     onSnapshot,
     query,
     orderBy,
-    where
+    where,
+    doc,
+    deleteDoc
 } from 'firebase/firestore'
 
 export default function Admin() {
@@ -24,17 +26,17 @@ export default function Admin() {
             const userDetail = localStorage.getItem('@detailUser')
             setUser(JSON.parse(userDetail))
 
-            if(userDetail){
+            if (userDetail) {
                 const data = JSON.parse(userDetail)
 
                 const taskRef = collection(db, 'taks')
                 const q = query(taskRef, orderBy('created', 'desc'),
-                where('userUid', '==', data?.uid))
+                    where('userUid', '==', data?.uid))
 
                 const unsub = onSnapshot(q, (snapshot) => {
                     let list = []
 
-                    snapshot.forEach((doc)=> {
+                    snapshot.forEach((doc) => {
                         list.push({
                             id: doc.id,
                             task: doc.data().task,
@@ -63,16 +65,21 @@ export default function Admin() {
             task: taksInput,
             created: new Date(),
             userUid: user?.uid,
-        }).then(()=> {
+        }).then(() => {
             console.log('Registered task')
             setTaksInput('')
-        }).catch((error)=> {
+        }).catch((error) => {
             console.log('Error Register ' + error)
         })
     }
 
     async function handleLogout() {
         await signOut(auth)
+    }
+
+    async function deleteTask(id){
+        const docRef = doc(db, 'taks', id)
+        await deleteDoc(docRef)
     }
 
     return (
@@ -89,15 +96,16 @@ export default function Admin() {
                 <button className='btn-add' type='submit'>Add task</button>
             </form>
 
-            <article className='list'>
-                <p>Terminar de assistir 6 vídeos do curso hoje.</p>
+            {taks.map((item) => (
+                <article key={item.id} className='list'>
+                    <p>{item.task}</p>
 
-                <div>
-                    <button>Edit</button>
-                    <button className='btn-done'>Done</button>
-                </div>
-
-            </article>
+                    <div>
+                        <button>Edit</button>
+                        <button onClick={() => deleteTask(item.id)} className='btn-done'>Done</button>
+                    </div>
+                </article>
+            ))}
 
             <button onClick={handleLogout} className='btn-logout'>Logout</button>
         </div>
